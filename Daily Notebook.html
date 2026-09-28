@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daily Notebook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --outer-bg: #FBE2D3;
+    --paper: #FFFBF6;
+    --card-border: #F2C6BB;
+    --grid-line: rgba(230, 170, 155, 0.16);
+    --ink: #5B4A3E;
+    --ink-soft: #B08F82;
+    --label-pink: #EE9A93;
+    --accent: #E8847C;
+    --rule: #EFC9BE;
+    --dot: #E0B8AC;
+    --delete: #D48078;
+    --shadow: rgba(170, 110, 90, 0.16);
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --outer-bg: #2B211C;
+      --paper: #241C18;
+      --card-border: #4A342C;
+      --grid-line: rgba(230, 170, 155, 0.06);
+      --ink: #EFE1D6;
+      --ink-soft: #9C8477;
+      --label-pink: #E39C93;
+      --accent: #E8988E;
+      --rule: #5A423A;
+      --dot: #5A423A;
+      --delete: #E39C93;
+      --shadow: rgba(0, 0, 0, 0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --outer-bg: #2B211C;
+    --paper: #241C18;
+    --card-border: #4A342C;
+    --grid-line: rgba(230, 170, 155, 0.06);
+    --ink: #EFE1D6;
+    --ink-soft: #9C8477;
+    --label-pink: #E39C93;
+    --accent: #E8988E;
+    --rule: #5A423A;
+    --dot: #5A423A;
+    --delete: #E39C93;
+    --shadow: rgba(0, 0, 0, 0.4);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: var(--outer-bg);
+  }
+
+  body {
+    font-family: 'Caveat', cursive;
+    color: var(--ink);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    display: flex;
+    justify-content: center;
+    min-height: 100%;
+  }
+
+  .stage {
+    position: relative;
+    width: 100%;
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 46px 26px 70px;
+  }
+
+  /* ---- decorations (float in the peach margin, generic doodles) ---- */
+  .deco { position: absolute; pointer-events: none; z-index: 3; }
+  .deco svg { display: block; width: 100%; height: 100%; }
+  .d-berry-top   { top: 8px;   left: 50%; width: 46px; height: 46px; transform: translateX(-50%) rotate(-6deg); }
+  .d-spark-top   { top: 2px;   left: calc(50% + 46px); width: 26px; height: 26px; transform: rotate(10deg); }
+  .d-berry-right { top: 108px; right: 16px; width: 34px; height: 34px; transform: rotate(18deg); }
+  .d-spark-left1 { top: 250px; left: 8px;  width: 26px; height: 26px; }
+  .d-spark-left2 { top: 300px; left: 22px; width: 20px; height: 20px; }
+  .d-spark-r2    { bottom: 210px; right: 12px; width: 28px; height: 28px; transform: rotate(-8deg); }
+  .d-berry-bl    { bottom: 46px; left: 14px; width: 34px; height: 34px; transform: rotate(-14deg); }
+  .d-spark-bl    { bottom: 30px; left: 62px; width: 18px; height: 18px; }
+  .d-berry-br    { bottom: 40px; right: 18px; width: 40px; height: 40px; transform: rotate(10deg); }
+
+  @media (max-width: 460px) {
+    .d-spark-left1, .d-spark-left2, .d-spark-r2 { display: none; }
+    .d-berry-right { width: 28px; height: 28px; }
+  }
+
+  /* ---- the notebook card ---- */
+  .card {
+    position: relative;
+    z-index: 2;
+    background: var(--paper);
+    border: 2px solid var(--card-border);
+    border-radius: 22px;
+    box-shadow: 0 10px 30px var(--shadow);
+    padding: 26px clamp(16px, 5vw, 34px) 24px;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* header */
+  .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 18px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--rule);
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .head-field {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-width: 110px;
+  }
+  .head-label {
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--label-pink);
+    white-space: nowrap;
+  }
+  .head-field input {
+    font-family: 'Caveat', cursive;
+    font-weight: 600;
+    font-size: 23px;
+    color: var(--ink);
+    border: none;
+    background: transparent;
+    outline: none;
+    width: 100%;
+    min-width: 60px;
+  }
+  .head-field input::placeholder { color: var(--ink-soft); opacity: 0.7; }
+  .head-field.date input { text-align: right; }
+
+  /* rows */
+  .rows { display: flex; flex-direction: column; }
+
+  .row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 8px 0;
+    position: relative;
+  }
+
+  .desc {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-family: 'Caveat', cursive;
+    font-weight: 500;
+    font-size: 22px;
+    line-height: 1.3;
+    color: var(--ink);
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 0;
+    resize: none;
+    overflow: hidden;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .desc::placeholder { color: var(--ink-soft); opacity: 0.6; }
+
+  .leader {
+    flex: 0 1 32px;
+    min-width: 8px;
+    height: 1px;
+    align-self: center;
+    border-bottom: 2px dotted var(--dot);
+    margin: 0 2px;
+  }
+
+  .amount {
+    flex: 0 0 auto;
+    width: 88px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    font-size: 17px;
+    text-align: right;
+    color: var(--ink);
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 0;
+  }
+  .amount::placeholder { color: var(--ink-soft); opacity: 0.55; font-family: 'Caveat', cursive; font-size: 19px; }
+
+  .del {
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    color: var(--delete);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+    padding: 0;
+    margin-left: -2px;
+  }
+  .row:hover .del,
+  .row:focus-within .del { opacity: 0.6; }
+  .del:hover { opacity: 1 !important; }
+  .row.blank .del { display: none; }
+
+  .sign {
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: transparent;
+    color: var(--ink-soft);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    opacity: 0.4;
+    transition: opacity 0.12s ease;
+  }
+  .sign:hover, .sign:active { opacity: 0.9; }
+  .row.blank .sign { visibility: hidden; }
+
+  /* total */
+  .total-wrap { margin-top: 4px; padding-top: 8px; }
+  .total-rule { height: 2px; background: var(--rule); width: 100%; margin-bottom: 10px; }
+  .total-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-right: 26px;
+  }
+  .total-label {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 24px;
+    color: var(--accent);
+  }
+  .total-amount {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 20px;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 400px) {
+    .desc { font-size: 20px; }
+    .amount { width: 74px; font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="s-strawberry" viewBox="0 0 64 64">
+      <path d="M32 10 C24 10 24 18 24 18 C24 18 40 18 40 18 C40 18 40 10 32 10 Z" fill="#8FBF78"/>
+      <path d="M32 6 L34 14 M32 6 L28 13 M32 6 L38 13" stroke="#8FBF78" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <path d="M32 17 C14 17 8 34 16 48 C21 57 43 57 48 48 C56 34 50 17 32 17 Z" fill="#EA7A70"/>
+      <ellipse cx="24" cy="34" rx="2.4" ry="3.2" fill="#FCEBD9"/>
+      <ellipse cx="34" cy="30" rx="2.4" ry="3.2" fill="#FCEBD9"/>
+      <ellipse cx="42" cy="36" rx="2.4" ry="3.2" fill="#FCEBD9"/>
+      <ellipse cx="27" cy="45" rx="2.4" ry="3.2" fill="#FCEBD9"/>
+      <ellipse cx="38" cy="46" rx="2.4" ry="3.2" fill="#FCEBD9"/>
+      <ellipse cx="32" cy="52" rx="2.2" ry="2.8" fill="#FCEBD9"/>
+    </symbol>
+    <symbol id="s-sparkle" viewBox="0 0 40 40">
+      <path d="M20 2 C21 14 22 18 38 20 C22 22 21 26 20 38 C19 26 18 22 2 20 C18 18 19 14 20 2 Z" fill="#F3DD8C"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="stage" id="stage">
+  <div class="deco d-berry-top"><svg><use href="#s-strawberry"/></svg></div>
+  <div class="deco d-spark-top"><svg><use href="#s-sparkle"/></svg></div>
+  <div class="deco d-berry-right"><svg><use href="#s-strawberry"/></svg></div>
+  <div class="deco d-spark-left1"><svg><use href="#s-sparkle"/></svg></div>
+  <div class="deco d-spark-left2"><svg><use href="#s-sparkle"/></svg></div>
+  <div class="deco d-spark-r2"><svg><use href="#s-sparkle"/></svg></div>
+  <div class="deco d-berry-bl"><svg><use href="#s-strawberry"/></svg></div>
+  <div class="deco d-spark-bl"><svg><use href="#s-sparkle"/></svg></div>
+  <div class="deco d-berry-br"><svg><use href="#s-strawberry"/></svg></div>
+
+  <div class="card">
+    <div class="head">
+      <div class="head-field">
+        <span class="head-label">Title :</span>
+        <input id="titleField" type="text" placeholder="e.g. September expenses" autocomplete="off">
+      </div>
+      <div class="head-field date">
+        <span class="head-label">Date :</span>
+        <input id="dateField" type="text" placeholder="" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="rows" id="rows"></div>
+
+    <div class="total-wrap">
+      <div class="total-rule"></div>
+      <div class="total-row">
+        <span class="total-label">Total</span>
+        <span class="total-amount" id="totalAmount">0</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var STORAGE_KEY = 'notebook-entries-v1';
+  var META_KEY = 'notebook-meta-v1';
+  var rowsEl = document.getElementById('rows');
+  var totalEl = document.getElementById('totalAmount');
+  var titleField = document.getElementById('titleField');
+  var dateField = document.getElementById('dateField');
+
+  var entries = []; // [{id, text, amount}]
+
+  function uid() { return 'r' + Math.random().toString(36).slice(2, 10); }
+
+  function loadEntries() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  }
+  function saveEntries() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); } catch (e) {}
+  }
+  function loadMeta() {
+    try {
+      var raw = localStorage.getItem(META_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return {};
+  }
+  function saveMeta() {
+    try { localStorage.setItem(META_KEY, JSON.stringify({ title: titleField.value, date: dateField.value })); } catch (e) {}
+  }
+  function todayString() {
+    var d = new Date();
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  }
+  function parseAmount(str) {
+    if (!str) return 0;
+    var s = String(str).trim().replace(/,/g, '');
+    var neg = false;
+    if (/^\(.*\)$/.test(s)) {
+      neg = true;
+      s = s.slice(1, -1).trim();
+    }
+    var n = parseFloat(s);
+    if (isNaN(n)) return 0;
+    return neg ? -Math.abs(n) : n;
+  }
+  function formatTotal(n) {
+    var rounded = Math.round(n * 100) / 100;
+    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
+  }
+  function recalcTotal() {
+    var sum = 0;
+    entries.forEach(function (e) { sum += parseAmount(e.amount); });
+    totalEl.textContent = formatTotal(sum);
+  }
+  function autosize(ta) {
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+  }
+
+  function updateBlankClass(row, entry) {
+    var idx = entries.indexOf(entry);
+    var isLast = idx === entries.length - 1;
+    var isEmpty = !entry.text && !entry.amount;
+    row.classList.toggle('blank', isLast && isEmpty);
+  }
+
+  function renderAll() {
+    rowsEl.innerHTML = '';
+    entries.forEach(function (entry) { rowsEl.appendChild(buildRow(entry)); });
+    recalcTotal();
+  }
+
+  function buildRow(entry) {
+    var row = document.createElement('div');
+    row.className = 'row';
+    row.dataset.id = entry.id;
+
+    var desc = document.createElement('textarea');
+    desc.className = 'desc';
+    desc.rows = 1;
+    desc.placeholder = 'Write an expense…';
+    desc.value = entry.text || '';
+    desc.spellcheck = false;
+
+    var leader = document.createElement('div');
+    leader.className = 'leader';
+
+    var amount = document.createElement('input');
+    amount.className = 'amount';
+    amount.type = 'text';
+    amount.inputMode = 'decimal';
+    amount.placeholder = '0';
+    amount.value = entry.amount || '';
+
+    var sign = document.createElement('button');
+    sign.className = 'sign';
+    sign.type = 'button';
+    sign.setAttribute('aria-label', 'Toggle plus/minus');
+    sign.textContent = '±';
+
+    var del = document.createElement('button');
+    del.className = 'del';
+    del.type = 'button';
+    del.setAttribute('aria-label', 'Delete line');
+    del.textContent = '✕';
+
+    row.appendChild(desc);
+    row.appendChild(leader);
+    row.appendChild(sign);
+    row.appendChild(amount);
+    row.appendChild(del);
+    updateBlankClass(row, entry);
+
+    sign.addEventListener('click', function () {
+      var raw = amount.value.trim();
+      if (!raw) { amount.focus(); return; }
+      if (raw.charAt(0) === '-') {
+        raw = raw.slice(1);
+      } else if (/^\(.*\)$/.test(raw)) {
+        raw = '-' + raw.slice(1, -1);
+      } else {
+        raw = '-' + raw;
+      }
+      amount.value = raw;
+      entry.amount = raw;
+      recalcTotal();
+      saveEntries();
+    });
+
+    desc.addEventListener('input', function () {
+      entry.text = desc.value;
+      autosize(desc);
+      updateBlankClass(row, entry);
+      ensureTrailingBlank();
+      saveEntries();
+    });
+    desc.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter') {
+        ev.preventDefault();
+        amount.focus();
+      } else if (ev.key === 'Backspace' && desc.value === '' && amount.value === '') {
+        var idx = entries.indexOf(entry);
+        if (idx > 0) {
+          ev.preventDefault();
+          removeEntry(entry.id);
+          focusRow(idx - 1, 'desc');
+        }
+      }
+    });
+
+    amount.addEventListener('input', function () {
+      entry.amount = amount.value;
+      updateBlankClass(row, entry);
+      ensureTrailingBlank();
+      recalcTotal();
+      saveEntries();
+    });
+    amount.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter') {
+        ev.preventDefault();
+        var idx = entries.indexOf(entry);
+        focusRow(idx + 1, 'desc');
+      }
+    });
+
+    del.addEventListener('click', function () {
+      var idx = entries.indexOf(entry);
+      removeEntry(entry.id);
+      focusRow(Math.max(0, idx - 1), 'desc');
+    });
+
+    requestAnimationFrame(function () { autosize(desc); });
+    return row;
+  }
+
+  // Appends a fresh blank row WITHOUT rebuilding existing DOM nodes,
+  // so the focused element (and the on-screen keyboard) is never disturbed.
+  function ensureTrailingBlank() {
+    var last = entries[entries.length - 1];
+    if (!last || last.text || last.amount) {
+      var newEntry = { id: uid(), text: '', amount: '' };
+      entries.push(newEntry);
+      rowsEl.appendChild(buildRow(newEntry));
+      return true;
+    }
+    return false;
+  }
+
+  function removeEntry(id) {
+    var idx = entries.findIndex(function (e) { return e.id === id; });
+    if (idx === -1) return;
+    entries.splice(idx, 1);
+    if (entries.length === 0) entries.push({ id: uid(), text: '', amount: '' });
+    renderAll();
+    saveEntries();
+  }
+
+  function focusRow(idx, which) {
+    if (idx < 0) idx = 0;
+    if (idx >= entries.length) idx = entries.length - 1;
+    var row = rowsEl.children[idx];
+    if (!row) return;
+    var el = which === 'amount' ? row.querySelector('.amount') : row.querySelector('.desc');
+    if (el) {
+      el.focus();
+      if (el.tagName === 'TEXTAREA') { var v = el.value; el.value = ''; el.value = v; }
+    }
+  }
+
+  // ---- init ----
+  entries = loadEntries();
+  if (entries.length === 0) {
+    entries.push({ id: uid(), text: '', amount: '' });
+  } else {
+    var last = entries[entries.length - 1];
+    if (last.text || last.amount) entries.push({ id: uid(), text: '', amount: '' });
+  }
+
+  var meta = loadMeta();
+  titleField.value = meta.title || '';
+  dateField.value = meta.date || todayString();
+  titleField.addEventListener('input', saveMeta);
+  dateField.addEventListener('input', saveMeta);
+
+  renderAll();
+})();
+</script>
+
+</body>
+</html>
